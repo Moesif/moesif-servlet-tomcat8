@@ -131,6 +131,7 @@ public class MoesifFilter implements Filter {
    * @param    debug boolean
    */
   public void setDebug(boolean debug) {
+    logger.info("Setting debug to " + debug);
     this.debug = debug;
   }
 
@@ -189,9 +190,7 @@ public class MoesifFilter implements Filter {
     // Drain the queue and stop the timer tasks.
     this.drainQueueAndStopJobs();
 
-    if (debug) {
-      logger.info("Destroyed Moesif filter");
-    }
+    logger.info("Destroyed Moesif filter");
   }
 
   public void updateUser(UserModel userModel) throws Throwable{
@@ -203,9 +202,7 @@ public class MoesifFilter implements Filter {
           moesifApi.getAPI().updateUser(userModel);
         }
         catch(Exception e) {
-          if (debug) {
-            logger.warning("Update User to Moesif failed " + e.toString());
-          }
+          logger.warning("Update User to Moesif failed " + e.toString());
         }
       }
       else {
@@ -238,9 +235,7 @@ public class MoesifFilter implements Filter {
       try {
         moesifApi.getAPI().updateUsersBatch(users);
       } catch (Exception e) {
-        if (debug) {
-          logger.warning("Update User to Moesif failed " + e.toString());
-        }
+        logger.warning("Update User to Moesif failed " + e.toString());
       }
     }
   }
@@ -254,9 +249,7 @@ public class MoesifFilter implements Filter {
           moesifApi.getAPI().updateCompany(companyModel);
         }
         catch(Exception e) {
-          if (debug) {
-            logger.warning("Update Company to Moesif failed " + e.toString());
-          }
+          logger.warning("Update Company to Moesif failed " + e.toString());
         }
       }
       else {
@@ -289,18 +282,14 @@ public class MoesifFilter implements Filter {
       try {
         moesifApi.getAPI().updateCompaniesBatch(companies);
       } catch (Exception e) {
-        if (debug) {
-          logger.warning("Update Companies to Moesif failed " + e.toString());
-        }
+        logger.warning("Update Companies to Moesif failed " + e.toString());
       }
     }
   }
 
   @Override
   public void doFilter(ServletRequest request, ServletResponse response, FilterChain filterChain) throws IOException, ServletException {
-    if (debug) {
-      logger.info("filtering request");
-    }
+    logger.info("filtering request");
 
     Date startDate = new Date();
 
@@ -315,7 +304,7 @@ public class MoesifFilter implements Filter {
 
     if (config.skip(httpRequest, httpResponse)) {
       filterChain.doFilter(httpRequest, httpResponse);
-        if (debug) { logger.warning("skipping request"); }
+        logger.warning("skipping request");
         return;
     }
 
@@ -389,14 +378,18 @@ public class MoesifFilter implements Filter {
     }
 
     String content = requestWrapper.getContent();
+    logger.info("Request content: " + content);
 
-    if (logBody && content != null  && !content.isEmpty()) {
+    if (logBody && content != null) {
+      logger.info("getEventRequestModel BodyParser.parseBody");
       BodyParser.BodyWrapper bodyWrapper = BodyParser.parseBody(requestWrapper.getHeaders(), content);
       eventRequestBuilder.body(bodyWrapper.body);
       eventRequestBuilder.transferEncoding(bodyWrapper.transferEncoding);
     }
 
-    return eventRequestBuilder.build();
+    EventRequestModel model = eventRequestBuilder.build();
+    logger.info("(Object) EventRequestModel.body = " + model.getBody().toString());
+    return model;
   }
 
   private EventResponseModel getEventResponseModel(LoggingHttpServletResponseWrapper responseWrapper, Date date) {
@@ -407,14 +400,18 @@ public class MoesifFilter implements Filter {
         .headers(responseWrapper.getHeaders());
 
     String content = responseWrapper.getContent();
+    logger.info("Response content: " + content);
 
-    if (logBody && content != null  && !content.isEmpty()) {
+    if (logBody && content != null) {
+      logger.info("getEventResponseModel BodyParser.parseBody");
       BodyParser.BodyWrapper bodyWrapper = BodyParser.parseBody(responseWrapper.getHeaders(), content);
       eventResponseBuilder.body(bodyWrapper.body);
       eventResponseBuilder.transferEncoding(bodyWrapper.transferEncoding);
     }
 
-    return eventResponseBuilder.build();
+    EventResponseModel model = eventResponseBuilder.build();
+    logger.info("(Object) EventResponseModel.body = " + model.getBody().toString());
+    return model;
   }
 
   /***
@@ -445,9 +442,7 @@ public class MoesifFilter implements Filter {
 
     // Stop the scheduled jobs
     try {
-      if (debug) {
-        logger.info("Stopping scheduled jobs.");
-      }
+      logger.info("Stopping scheduled jobs.");
       this.resetJobTimer(this.updateConfigTimer);
       this.resetJobTimer(this.sendBatchEventTimer);
     } catch (Exception e) {
@@ -501,10 +496,8 @@ public class MoesifFilter implements Filter {
 
     // Check if batchJob is already running then return
     if (this.batchProcessor.isJobRunning()) {
-      if (debug) {
-        String msg = String.format("Send event job is in-progress.");
-        logger.info(msg);
-      }
+      String msg = String.format("Send event job is in-progress.");
+      logger.info(msg);
       return;
     }
 
@@ -516,20 +509,14 @@ public class MoesifFilter implements Filter {
 
     // Check Event job
     if (seconds > MAX_TARDINESS_SEND_EVENT_JOB) {
-      if (debug) {
-        String msg = String.format("Last send batchEvents job was executed %d minutes ago. Rescheduling job..", seconds/60);
-        logger.info(msg);
-      }
+      String msg = String.format("Last send batchEvents job was executed %d minutes ago. Rescheduling job..", seconds/60);
+      logger.info(msg);
       // Restart send batch event job.
       scheduleBatchEventsJob();
 
     }
-
-    if (debug) {
-      String msg = String.format("Last send batchEvents job was executed %d seconds ago.", seconds);
-      logger.info(msg);
-    }
-
+    String msg = String.format("Last send batchEvents job was executed %d seconds ago.", seconds);
+    logger.info(msg);
   }
   /***
    * Method to add event into a queue for batch-based event transfer.
@@ -543,9 +530,7 @@ public class MoesifFilter implements Filter {
 
       // Check send batchEvent job periodically based on counter if rescheduling is needed.
       if (sendBatchJobAliveCounter > 100) {
-        if (this.debug) {
-          logger.info("Check for liveness of taskRunner.");
-        }
+        logger.info("Check for liveness of taskRunner.");
         this.rescheduleSendEventsJobIfNeeded();
         sendBatchJobAliveCounter = 0;
       }
@@ -589,16 +574,12 @@ public class MoesifFilter implements Filter {
 
       APICallBack<Object> callBack = new APICallBack<Object>() {
         public void onSuccess(HttpContext context, Object response) {
-          if (debug) {
-            logger.info("send to Moesif success");
-          }
+          logger.info("send to Moesif success");
         }
 
         public void onFailure(HttpContext context, Throwable error) {
-          if (debug) {
-            logger.info("send to Moesif error ");
-            logger.info( error.toString());
-          }
+          logger.info("send to Moesif error ");
+          logger.info( error.toString());
         }
       };
 
@@ -621,15 +602,11 @@ public class MoesifFilter implements Filter {
             this.addEventToQueue(maskedEvent);
         } 
         else {
-        	if(debug) {
-        		logger.info("Skipped Event due to SamplingPercentage " + samplingPercentage + " and randomPercentage " + randomPercentage);
-        	}
+          logger.info("Skipped Event due to SamplingPercentage " + samplingPercentage + " and randomPercentage " + randomPercentage);
         }
 
       } catch(Throwable e) {
-        if (debug) {
-          logger.warning("add event to queue failed " + e);
-        }
+        logger.warning("add event to queue failed " + e);
       }
 
     } else {

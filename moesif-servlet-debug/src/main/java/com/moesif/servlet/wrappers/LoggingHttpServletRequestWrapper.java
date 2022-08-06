@@ -15,8 +15,11 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.logging.Logger;
 
 public class LoggingHttpServletRequestWrapper extends HttpServletRequestWrapper {
+
+  private static final Logger logger = Logger.getLogger(LoggingHttpServletRequestWrapper.class.toString());
 
   private static final List<String> FORM_CONTENT_TYPE = Arrays.asList("application/x-www-form-urlencoded", "multipart/form-data");
 
@@ -30,10 +33,13 @@ public class LoggingHttpServletRequestWrapper extends HttpServletRequestWrapper 
 
   public LoggingHttpServletRequestWrapper(HttpServletRequest request) {
     super(request);
+    logger.info("LoggingHttpServletRequestWrapper construct");
     this.delegate = request;
     if (isFormPost()) {
+      logger.info("LoggingHttpServletRequestWrapper is form post");
       this.parameterMap = request.getParameterMap();
     } else {
+      logger.info("LoggingHttpServletRequestWrapper is not form post");
       this.parameterMap = Collections.emptyMap();
     }
   }
@@ -41,16 +47,20 @@ public class LoggingHttpServletRequestWrapper extends HttpServletRequestWrapper 
   @Override
   public ServletInputStream getInputStream() throws IOException {
     if (ArrayUtils.isEmpty(content)) {
+      logger.info("getInputStream content is empty");
       return delegate.getInputStream();
     }
+    logger.info("getInputStream content is not empty:");
     return new LoggingServletInputStream(content);
   }
 
   @Override
   public BufferedReader getReader() throws IOException {
     if (ArrayUtils.isEmpty(content)) {
+        logger.info("getReader content is empty");
       return delegate.getReader();
     }
+    logger.info("getReader content is not empty");
     return new BufferedReader(new InputStreamReader(getInputStream()));
   }
 
@@ -94,11 +104,19 @@ public class LoggingHttpServletRequestWrapper extends HttpServletRequestWrapper 
     try {
       if (this.parameterMap.isEmpty()) {
         content = IOUtils.toByteArray(delegate.getInputStream());
+        logger.info("getContent parameterMap is empty, got delegate.getInputStream. content:" + new String(content));
       } else {
         content = getContentFromParameterMap(this.parameterMap);
+        logger.info("getContent parameterMap is not empty, got getContentFromParameterMap. content:" + new String(content));
       }
       String requestEncoding = delegate.getCharacterEncoding();
+      logger.info("getContent requestEncoding:" + requestEncoding);
       String normalizedContent = StringUtils.normalizeSpace(new String(content, requestEncoding != null ? requestEncoding : StandardCharsets.UTF_8.name()));
+      if (!Arrays.equals(content, normalizedContent.getBytes())) {
+        logger.info("getContent normalizedContent not equal to content:" + normalizedContent);
+      } else {
+        logger.info("getContent normalizedContent is same as content");
+      }
       return normalizedContent;
       // return StringUtils.isBlank(normalizedContent) ? "[EMPTY]" : normalizedContent;
     } catch (IOException e) {
@@ -177,31 +195,37 @@ public class LoggingHttpServletRequestWrapper extends HttpServletRequestWrapper 
     private final InputStream is;
 
     private LoggingServletInputStream(byte[] content) {
+      logger.info("LoggingServletInputStream content is " + new String(content));
       this.is = new ByteArrayInputStream(content);
     }
 
     @Override
     public boolean isFinished() {
+      logger.info("LoggingServletInputStream isFinished");
       return true;
     }
 
     @Override
     public boolean isReady() {
+      logger.info("LoggingServletInputStream isReady");
       return true;
     }
 
     @Override
     public void setReadListener(ReadListener readListener) {
+      logger.info("LoggingServletInputStream setReadListener");
     }
 
     @Override
     public int read() throws IOException {
+      logger.info("LoggingServletInputStream read");
       return this.is.read();
     }
 
     @Override
     public void close() throws IOException {
       super.close();
+      logger.info("LoggingServletInputStream close");
       is.close();
     }
   }

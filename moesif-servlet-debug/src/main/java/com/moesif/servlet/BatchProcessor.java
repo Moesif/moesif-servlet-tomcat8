@@ -157,10 +157,6 @@ public class BatchProcessor extends TimerTask {
 
         // Return if queue is empty
         if (this.batchQueue.isEmpty()) {
-            if (this.debug) {
-                logger.info("No events to send.");
-            }
-
             // reset jobRunning
             this.jobRunning = false;
             return;
