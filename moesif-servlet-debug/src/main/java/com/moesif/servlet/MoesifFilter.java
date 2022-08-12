@@ -388,7 +388,11 @@ public class MoesifFilter implements Filter {
     }
 
     EventRequestModel model = eventRequestBuilder.build();
-    logger.info("(Object) EventRequestModel.body = " + model.getBody().toString());
+    if (model.getBody() == null) {
+      logger.info("(Object) EventRequestModel.body was null");
+    } else {
+      logger.info("(Object) EventRequestModel.body = " + model.getBody().toString());
+    }
     return model;
   }
 
@@ -410,7 +414,11 @@ public class MoesifFilter implements Filter {
     }
 
     EventResponseModel model = eventResponseBuilder.build();
-    logger.info("(Object) EventResponseModel.body = " + model.getBody().toString());
+    if (model.getBody() == null) {
+      logger.info("(Object) EventResponseModel.body was null");
+    } else {
+      logger.info("(Object) EventResponseModel.body = " + model.getBody().toString());
+    }
     return model;
   }
 
