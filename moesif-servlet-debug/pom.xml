@@ -61,7 +61,7 @@
     <dependency>
       <groupId>com.moesif.api</groupId>
       <artifactId>moesifapi</artifactId>
-      <version>1.6.16</version>
+      <version>1.6.16-debug</version>
     </dependency>
     <dependency>
 	  <groupId>com.fasterxml.jackson.core</groupId>

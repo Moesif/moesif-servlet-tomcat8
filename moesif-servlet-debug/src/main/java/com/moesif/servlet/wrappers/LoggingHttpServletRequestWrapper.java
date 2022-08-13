@@ -33,6 +33,7 @@ public class LoggingHttpServletRequestWrapper extends HttpServletRequestWrapper 
 
   public LoggingHttpServletRequestWrapper(HttpServletRequest request) {
     super(request);
+    this.content = new byte[0];
     logger.info("LoggingHttpServletRequestWrapper construct");
     this.delegate = request;
     if (isFormPost()) {
