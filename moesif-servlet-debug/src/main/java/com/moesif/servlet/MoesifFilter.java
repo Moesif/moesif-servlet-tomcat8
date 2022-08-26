@@ -389,7 +389,7 @@ public class MoesifFilter implements Filter {
       else
         eventResponseModel = new EventResponseBuilder().time(new Date()).build();
 
-      if (!(responseWrapper.getResponse() instanceof LoggingHttpServletResponseWrapper)) {
+      if (!wrapResponse || !(responseWrapper.getResponse() instanceof LoggingHttpServletResponseWrapper)) {
         sendEvent(
               eventRequestModel,
               eventResponseModel,
