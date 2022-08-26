@@ -4,16 +4,6 @@
          xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee
 http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd">
 
-
-  <filter>
-    <filter-name>LogFilter</filter-name>
-    <filter-class>com.moesif.servlet.example.LogFilter</filter-class>
-  </filter>
-  <filter-mapping>
-    <filter-name>LogFilter</filter-name>
-    <url-pattern>/*</url-pattern>
-  </filter-mapping>
-
   <servlet>
     <servlet-name>Servlet Example</servlet-name>
     <servlet-class>com.moesif.servlet.example.ServletDemo</servlet-class>
@@ -28,7 +18,7 @@ http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd">
     <servlet-class>com.moesif.servlet.example.UsersServlet</servlet-class>
     <init-param>
       <param-name>application-id</param-name>
-      <param-value>eyJhcHAiOiI0NDI6MzIzIiwidmVyIjoiMi4wIiwib3JnIjoiODY6MzEzIiwiaWF0IjoxNjU5MzEyMDAwfQ.o2VlsnAbUgsJBcr2VaYiMVA3a3zrlW8FolaetPIFQus</param-value>
+      <param-value>eyJhcHAiOiI5MjozNzEiLCJ2ZXIiOiIyLjAiLCJvcmciOiI2NDA6MTI4IiwiaWF0IjoxNjU5MzEyMDAwfQ.dxL6jIZuvgV9SIta5Y9RWxjkUw3Bq0EtPCHycmpJ9es</param-value>
     </init-param>
   </servlet>
   <servlet-mapping>
@@ -41,7 +31,7 @@ http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd">
     <servlet-class>com.moesif.servlet.example.CompaniesServlet</servlet-class>
     <init-param>
       <param-name>application-id</param-name>
-      <param-value>eyJhcHAiOiI0NDI6MzIzIiwidmVyIjoiMi4wIiwib3JnIjoiODY6MzEzIiwiaWF0IjoxNjU5MzEyMDAwfQ.o2VlsnAbUgsJBcr2VaYiMVA3a3zrlW8FolaetPIFQus</param-value>
+      <param-value>eyJhcHAiOiI5MjozNzEiLCJ2ZXIiOiIyLjAiLCJvcmciOiI2NDA6MTI4IiwiaWF0IjoxNjU5MzEyMDAwfQ.dxL6jIZuvgV9SIta5Y9RWxjkUw3Bq0EtPCHycmpJ9es</param-value>
     </init-param>
   </servlet>
   <servlet-mapping>
@@ -54,7 +44,7 @@ http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd">
     <filter-class>com.moesif.servlet.MoesifFilter</filter-class>
     <init-param>
       <param-name>application-id</param-name>
-      <param-value>eyJhcHAiOiI0NDI6MzIzIiwidmVyIjoiMi4wIiwib3JnIjoiODY6MzEzIiwiaWF0IjoxNjU5MzEyMDAwfQ.o2VlsnAbUgsJBcr2VaYiMVA3a3zrlW8FolaetPIFQus</param-value>
+      <param-value>eyJhcHAiOiI5MjozNzEiLCJ2ZXIiOiIyLjAiLCJvcmciOiI2NDA6MTI4IiwiaWF0IjoxNjU5MzEyMDAwfQ.dxL6jIZuvgV9SIta5Y9RWxjkUw3Bq0EtPCHycmpJ9es</param-value>
     </init-param>
     <init-param>
       <param-name>debug</param-name>
