@@ -7,6 +7,8 @@ import javax.servlet.WriteListener;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
 import java.io.*;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.logging.Logger;
 
@@ -20,6 +22,7 @@ public class LoggingHttpServletResponseWrapper extends HttpServletResponseWrappe
 
   public LoggingHttpServletResponseWrapper(HttpServletResponse response) {
     super(response);
+    logger.info("LoggingHttpServletResponseWrapper construct");
   }
 
   @Override
@@ -58,12 +61,15 @@ public class LoggingHttpServletResponseWrapper extends HttpServletResponseWrappe
 
   @Override
   public void flushBuffer() throws IOException {
+    logger.info("flushBuffer");
     if (writer != null) {
       logger.info("flushBuffer writer != null, flushing writer");
       writer.flush();
     } else if (outputStream != null) {
       logger.info("flushBuffer outputStream != null, flushing outputStream");
       logStream.flush();
+    } else {
+      logger.info("flushBuffer both writer and outputStream are null");
     }
   }
 
@@ -141,7 +147,7 @@ public class LoggingHttpServletResponseWrapper extends HttpServletResponseWrappe
 
     @Override
     public void write(byte[] b, int off, int len) throws IOException {
-      logger.info("LoggingServletOutputStream write with offset " + Arrays.toString(b));
+      logger.info("LoggingServletOutputStream write with offset=" + StandardCharsets.UTF_8.decode(ByteBuffer.wrap(b, off, len)));
       outputStream.write(b, off, len);
       baos.write(b, off, len);
     }
