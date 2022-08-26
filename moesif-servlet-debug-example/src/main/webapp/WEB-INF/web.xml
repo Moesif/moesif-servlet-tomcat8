@@ -54,6 +54,14 @@ http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd">
       <param-name>logBody</param-name>
       <param-value>true</param-value>
     </init-param>
+    <init-param>
+      <param-name>wrapRequest</param-name>
+      <param-value>false</param-value>
+    </init-param>
+    <init-param>
+      <param-name>wrapResponse</param-name>
+      <param-value>false</param-value>
+    </init-param>
   </filter>
   <filter-mapping>
     <filter-name>MoesifFilter</filter-name>

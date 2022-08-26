@@ -3,6 +3,7 @@ package com.moesif.servlet;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.lang.*;
 
@@ -15,6 +16,7 @@ import javax.servlet.ServletResponse;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpServletResponseWrapper;
 
 import com.moesif.api.models.*;
 
@@ -38,6 +40,7 @@ public class MoesifFilter implements Filter {
   private MoesifAPIClient moesifApi;
   private boolean debug;
   private boolean logBody;
+  private boolean wrapRequest, wrapResponse;
   private BatchProcessor batchProcessor = null; // Manages queue & provides a taskRunner to send events in batches.
   private int sendBatchJobAliveCounter = 0;     // counter to check scheduled job is alive or not.
 
@@ -176,6 +179,25 @@ public class MoesifFilter implements Filter {
       }
     }
 
+    String wrapRequest = filterConfig.getInitParameter("wrapRequest");
+    if (wrapRequest != null) {
+      if (wrapRequest.equals("false")) {
+        this.wrapRequest = false;
+      } else {
+        this.wrapRequest = true;
+      }
+    }
+    logger.info("wrapRequest=" + this.wrapRequest);
+    String wrapResponse = filterConfig.getInitParameter("wrapResponse");
+    if (wrapResponse != null) {
+      if (wrapResponse.equals("false")) {
+        this.wrapResponse = false;
+      } else {
+        this.wrapResponse = true;
+      }
+    }
+    logger.info("wrapResponse=" + this.wrapResponse);
+
     // Setup app config manager and run it immediately to load app config.
     AppConfigManager.getInstance().setMoesifApiClient(this.moesifApi, this.debug);
      AppConfigManager.getInstance().run();
@@ -308,17 +330,22 @@ public class MoesifFilter implements Filter {
         return;
     }
 
-    LoggingHttpServletRequestWrapper requestWrapper = new LoggingHttpServletRequestWrapper(httpRequest);
-    LoggingHttpServletResponseWrapper responseWrapper = new LoggingHttpServletResponseWrapper(httpResponse);
+    LoggingHttpServletRequestWrapper requestWrapper = null;
+    if (wrapRequest)
+      requestWrapper = new LoggingHttpServletRequestWrapper(httpRequest);
+    LoggingHttpServletResponseWrapper responseWrapper = null;
+    if (wrapResponse)
+      responseWrapper = new LoggingHttpServletResponseWrapper(httpResponse);
 
 
     // Initialize transactionId    
     String transactionId = null;
 
     if (!config.disableTransactionId) {
-    	
-    	String reqTransId = requestWrapper.getHeader("X-Moesif-Transaction-Id"); 
-        
+      String reqTransId = "foo";
+      if(wrapRequest) {
+        reqTransId = requestWrapper.getHeader("X-Moesif-Transaction-Id");
+      }
         if (reqTransId != null && !reqTransId.isEmpty()) {
         	transactionId = reqTransId;
         } else {
@@ -326,18 +353,41 @@ public class MoesifFilter implements Filter {
         }
 
         // Add Transaction Id to the response model and response sent to the client
-        responseWrapper.addHeader("X-Moesif-Transaction-Id", transactionId);	
+      if (wrapResponse)
+        responseWrapper.addHeader("X-Moesif-Transaction-Id", transactionId);
     }
 
-    EventRequestModel eventRequestModel = getEventRequestModel(requestWrapper,
+    EventRequestModel eventRequestModel;
+    if (wrapRequest)
+      eventRequestModel = getEventRequestModel(requestWrapper,
         startDate, config.getApiVersion(httpRequest, httpResponse), transactionId);
+    else
+      eventRequestModel = new EventRequestBuilder().time(new Date()).uri("test.uri").verb("GET").build();
 
     // pass to next step in the chain.
     try {
-      filterChain.doFilter(requestWrapper, responseWrapper);
+      ServletRequest req;
+      if (wrapRequest)
+        req = requestWrapper;
+      else
+        req = httpRequest;
+      ServletResponse resp;
+      if (wrapResponse)
+        resp = responseWrapper;
+      else
+        resp = httpResponse;
+      filterChain.doFilter(req, resp);
+    } catch (IOException|ServletException ex) {
+      logger.log(Level.SEVERE,  "Error in call to doFilter after Moesif", ex);
+      throw ex;
     } finally {
       Date endDate = new Date();
-      EventResponseModel eventResponseModel = getEventResponseModel(responseWrapper, endDate);
+
+      EventResponseModel eventResponseModel;
+      if (wrapResponse)
+        eventResponseModel = getEventResponseModel(responseWrapper, endDate);
+      else
+        eventResponseModel = new EventResponseBuilder().time(new Date()).build();
 
       if (!(responseWrapper.getResponse() instanceof LoggingHttpServletResponseWrapper)) {
         sendEvent(
